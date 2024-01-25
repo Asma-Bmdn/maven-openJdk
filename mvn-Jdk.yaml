@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: My-pool1
 
 stages:
 - stage: InstallerMavenEtOpenJDK
@@ -14,8 +14,8 @@ stages:
 
     - script: |
         # Récupérer des informations sur l'agent
-        AGENT_NAME=$(hostname)
-        AGENT_IP=$(hostname -I | awk '{print $1}')
+        AGENT_NAME=$(My-pool1)
+        AGENT_IP=$(My-pool1 -I | awk '{print $1}')
 
         # Installer OpenJDK
         sudo apt-get update
