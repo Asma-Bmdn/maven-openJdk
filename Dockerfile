@@ -44,5 +44,5 @@ RUN docker --version
 RUN mvn clean install
 
 # Commande par défaut pour démarrer votre application (ajustez selon votre besoin)
-CMD ["java", "-jar", "target/votre-application.jar"]
+CMD ["java", "-jar", "target/My-application.jar"]
 
