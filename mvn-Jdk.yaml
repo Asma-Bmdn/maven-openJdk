@@ -10,11 +10,51 @@ jobs:
   steps:
   - checkout: self
 
+  # Step 1: Authenticate to Azure (Assuming you have Azure CLI installed)
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: '<Azure subscription 1>'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az login --service-principal -u $servicePrincipalId -p $servicePrincipalSecret --tenant $tenantId
+
+  # Step 2: Create Azure Container Registry (ACR)
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: '<Azure subscription 1>'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az acr create --name $acrName --resource-group $resourceGroupName --sku Basic
+
+  # Step 3: Build Docker image
   - task: Docker@2
     inputs:
       command: 'build'
       Dockerfile: '**/Dockerfile'
       tags: 'docker-repository:latest'
 
-  - script: 'docker run -it docker-repository:latest'
-    displayName: 'Run Docker Container'
+  # Step 4: Login to ACR
+  - task: Docker@2
+    inputs:
+      command: 'login'
+      containerRegistry: $acrName.azurecr.io
+
+  # Step 5: Push Docker image to ACR
+  - task: Docker@2
+    inputs:
+      command: 'push'
+      containerRegistry: $acrName.azurecr.io
+      repository: 'docker-repository'
+      tags: 'latest'
+
+  # Step 6: Run Docker container on Azure VM
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: '<Azure subscription 1>'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az vm run-command invoke --resource-group $resourceGroupName --name master --command-id RunShellScript --scripts "docker run -it $acrName.azurecr.io/docker-repository:latest"
+
