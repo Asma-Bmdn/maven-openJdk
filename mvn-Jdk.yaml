@@ -10,50 +10,11 @@ jobs:
   steps:
   - checkout: self
 
-  - script: |
-      # Vérifier si OpenJDK est installé
-      if command -v java &> /dev/null; then
-          echo "OpenJDK already installed. Nothing to do."
-      else
-          # Installer OpenJDK
-          sudo apt-get update
-          sudo apt-get install -y openjdk-11-jdk
-          echo "OpenJDK installed successfully."
-      fi
+  - task: Docker@2
+    inputs:
+      command: 'build'
+      Dockerfile: '**/Dockerfile'
+      tags: 'docker-repository:latest'
 
-      # Vérifier si Maven est installé
-      if command -v mvn &> /dev/null; then
-          echo "Maven already installed. Nothing to do."
-      else
-          # Installer Maven
-          sudo apt-get install -y maven
-          echo "Maven installed successfully."
-      fi
-
-      # Afficher les versions installées
-      java -version
-      mvn --version
-
-      # Vérifier si Docker est installé
-      if command -v docker &> /dev/null; then
-          echo "Docker already installed. Nothing to do."
-      else
-          # Installer Docker
-          sudo apt-get install -y docker.io
-          echo "Docker installed successfully."
-          
-          # Assurer que Docker est dans le chemin d'accès
-          export PATH=$PATH:/usr/bin/docker
-      fi
-
-      # Afficher la version de Docker
-      docker --version
-
-      # Construire l'image Docker
-      docker build -t docker-repository:latest .
-      
-      # Exécuter le conteneur Docker
-      docker run -it docker-repository:latest
-    displayName: 'Install OpenJDK, Maven, Build and Run Docker Container'
-
- 
+  - script: 'docker run -it docker-repository:latest'
+    displayName: 'Run Docker Container'
