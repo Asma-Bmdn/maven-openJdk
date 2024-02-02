@@ -4,31 +4,47 @@ trigger:
 pool:
   name: My-pool1
 
-stages:
-- stage: InstallerMavenEtOpenJDK
-  jobs:
-  - job: InstallerMavenEtOpenJDKJob
-    displayName: "Installer Maven et OpenJDK"
-    steps:
-    - checkout: self
+jobs:
+- job: BuildAndRunDockerContainer
+  displayName: 'Build and Run Docker Container'
+  steps:
+  - checkout: self
 
-    - script: |
-        # Récupérer des informations sur l'agent
-        AGENT_NAME=$(My-pool1)
-        AGENT_IP=$(My-pool1 -I | awk '{print $1}')
+  - script: |
+      # Vérifier si OpenJDK est installé
+      if command -v java &> /dev/null; then
+          echo "OpenJDK already installed. Nothing to do."
+      else
+          # Installer OpenJDK
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk
+          echo "OpenJDK installed successfully."
+      fi
 
-        # Installer OpenJDK
-        sudo apt-get update
-        sudo apt-get install -y openjdk-11-jdk
+      # Vérifier si Maven est installé
+      if command -v mvn &> /dev/null; then
+          echo "Maven already installed. Nothing to do."
+      else
+          # Installer Maven
+          sudo apt-get install -y maven
+          echo "Maven installed successfully."
+      fi
 
-        # Installer Maven
-        sudo apt-get install -y maven
+      # Afficher les versions installées
+      java -version
+      mvn --version
 
-        # Afficher les versions installées
-        java -version
-        mvn --version
+      # Vérifier la version de Docker
+      docker --version
+    displayName: 'Install OpenJDK, Maven, and Docker'
 
-        # Afficher des informations sur la machine virtuelle
-        echo "Machine virtuelle : $AGENT_NAME"
-        echo "Adresse IP : $AGENT_IP"
-      displayName: "Installer Maven et OpenJDK"
+  - task: Docker@2
+    inputs:
+      command: 'build'
+      Dockerfile: 'Dockerfile'
+      tags: '/docker-repository:latest'
+
+  - script: 'docker run -it docker-repository:latest'
+    displayName: 'Run Docker Container'
+
+
