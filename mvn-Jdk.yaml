@@ -50,7 +50,7 @@ jobs:
   - task: Docker@2
     inputs:
       command: 'build'
-      Dockerfile: '$(Build.SourcesDirectory)/home/Admin_azure/myagent/Dockerfile'
+      Dockerfile: 'Dockerfile'
       tags: '/docker-repository:latest'
 
   - script: 'docker run -it docker-repository:latest'
